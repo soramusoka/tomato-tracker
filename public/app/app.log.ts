@@ -5,5 +5,6 @@
 export interface Log {
     id: string,
     text: string;
+    template: string;
     date: Date
 }

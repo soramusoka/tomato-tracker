@@ -29,14 +29,17 @@
                 </button>
             </div>
 
-            <h3>History</h3>
+            <div class="gray">
+                <span class="pull-right">count: {{logs.length}}</span>
+                <h3>History</h3>
+            </div>
             <div class="panel panel-default" style="margin-top: 1em;" *ngFor="#log of logs">
                 <div class="panel-body">
                     <button class="btn btn-default pull-right" (click)="onDeleteLog(log.id)">
                         <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
                     </button>
-                    <div class="entry-date">{{log.date}}</div>
-                    <div class="entry-value">{{log.text}}</div>
+                    <div class="entry-date gray">{{log.date}}</div>
+                    <div [innerHTML]="log.template" class="entry-value"></div>
                 </div>
             </div>
         </div>
