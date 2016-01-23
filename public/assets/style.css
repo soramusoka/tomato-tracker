@@ -1,0 +1,17 @@
+body {
+    background: url(binding_dark.png) repeat;
+}
+
+.entry-date {
+    font-size: 0.8em;
+    color: #BABABA;
+}
+
+.entry-value {
+    margin-top: 5px;
+    font-size: 1.2em;
+}
+
+#header-title {
+    color: white;
+}
