@@ -6,16 +6,18 @@ import {Component} from 'angular2/core';
 import {ClockService} from "./app.clock.service";
 import {Clock} from "./app.clock";
 import {Log} from "./app.log";
+import {ConfigService, Config} from "./app.config";
 
 @Component({
     selector: 'app',
     templateUrl: './app/template.html',
-    providers: [ClockService]
+    providers: [ClockService, ConfigService]
 })
 export class ClockComponent {
     private clock: Clock;
     private audio: { play: () => void; };
     private interval = null;
+    private config: Config;
 
     public clockStarted = false;
     public logs: Array<Log> = [
@@ -28,16 +30,17 @@ export class ClockComponent {
     ];
     public logText: string = '';
 
-    constructor(private clockService: ClockService) {
-        this.createClock();
+    constructor(private clockService: ClockService, private configService: ConfigService) {
         this.audio = new Audio('./assets/sound.mp3');
+        this.config = configService.getConfig();
+        this.createClock();
     }
 
     private createClock() {
         let onEachSecond = (time: number) => {
             if (time == 0) this.notify();
         };
-        this.clock = this.clockService.createClock(5, onEachSecond);
+        this.clock = this.clockService.createClock(this.config.counter, onEachSecond);
     }
 
     private notify(): void {
@@ -75,7 +78,10 @@ export class ClockComponent {
             let log = { id: id, date: new Date(), text: this.logText, template: template };
             this.logs.unshift(log);
             this.logText = '';
-            this.onResetTimer();
+
+            if (this.interval !== null) {
+                this.onResetTimer();
+            }
         }
     }
 
@@ -110,5 +116,9 @@ export class ClockComponent {
         clearInterval(this.interval);
         this.interval = null;
         this.createClock();
+
+        if (this.config.sprint) {
+            this.onStartTimer();
+        }
     }
 }
