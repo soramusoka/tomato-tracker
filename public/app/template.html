@@ -15,39 +15,68 @@
                     </div>
                 </div>
             </div>
-            <div class="btn-group" role="group">
-                <button *ngIf="!clockStated" class="btn btn-default" (click)="onStartTimer()">Start</button>
-                <button *ngIf="clockStated" class="btn btn-default" (click)="onStopTimer()">Stop</button>
-            </div>
-            <div class="btn-group" role="group">
-                <button class="btn btn-default" (click)="onResetTimer()">Reset</button>
-            </div>
-            <div class="btn-group" role="group">
-                <button class="btn btn-default"
-                        [disabled]="!logText"
-                        (click)="onSaveLog()">Save
-                </button>
-            </div>
-            <div class="btn-group" role="group">
-                <span style="margin-left: 10px;">
-                    Sprint: <span style="color: #00B8FF">{{config.sprint}}</span>
-                </span>
-                <span style="margin-left: 10px;">
-                    Counter: <span style="color: #00B8FF">{{config.counter}}</span> seconds
-                </span>
-            </div>
 
+            <div class="well well-sm" style="background-color: rgba(70, 69, 69, 0.38)">
+                <div class="btn-group" role="group">
+                    <button [hidden]="clockStarted" class="btn btn-default" (click)="onStartTimer()">Start</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button [hidden]="!clockStarted" class="btn btn-default" (click)="onStopTimer()">Stop</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-default" (click)="onResetTimer()">Reset</button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-default"
+                            [disabled]="!logText"
+                            (click)="onSaveLog()">Save
+                    </button>
+                </div>
+                <div class="btn-group" role="group">
+                    <span style="margin-left: 10px;">
+                        Today: <span style="color: #217dbb">{{today}}</span>
+                    </span>
+                    <span style="margin-left: 10px;">
+                        Sprint: <span style="color: #217dbb">{{config.sprint}}</span>
+                    </span>
+                    <span style="margin-left: 10px;">
+                        Counter: <span style="color: #217dbb">{{config.counter}}</span> seconds
+                    </span>
+                </div>
+            </div>
             <div class="gray">
-                <span class="pull-right">count: {{logs.length}}</span>
                 <h3>History</h3>
             </div>
-            <div class="panel panel-default" style="margin-top: 1em;" *ngFor="#log of logs">
-                <div class="panel-body">
-                    <button class="btn btn-default pull-right" (click)="onDeleteLog(log.id)">
-                        <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-                    </button>
-                    <div class="entry-date gray">{{log.date}}</div>
-                    <div [innerHTML]="log.template" class="entry-value"></div>
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="panel panel-default" style="margin-top: 1em;" *ngFor="#log of logs">
+                        <div class="panel-body">
+                            <div>
+                                <div class="pull-right">
+                                    <button class="btn btn-sm btn-primary" (click)="onCopyLog(log.text)">
+                                        <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
+                                    </button>
+                                    <button class="btn btn-sm btn-default" (click)="onDeleteLog(log)">
+                                        <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                                <div class="entry-date gray">
+                                    <span class="label label-default">{{log.date.format()}}</span> <span class="label label-default">{{log.period}} sec</span>
+                                </div>
+                            </div>
+                            <div [innerHTML]="log.template" class="entry-value"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="panel panel-default" style="margin-top: 1em;">
+                        <div class="panel-body">
+                            <span>Summary: {{summary}} sec</span>
+                            <div *ngFor="#task of tasks" style="margin-top: 0.8em;">
+                                <span class="task">{{task.name}}</span> - {{task.value}} sec
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

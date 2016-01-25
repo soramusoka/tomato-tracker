@@ -7,6 +7,9 @@ import {ClockService} from "./app.clock.service";
 import {Clock} from "./app.clock";
 import {Log} from "./app.log";
 import {ConfigService, Config} from "./app.config";
+import {Task} from "./app.task";
+
+declare let moment;
 
 @Component({
     selector: 'app',
@@ -19,16 +22,21 @@ export class ClockComponent {
     private interval = null;
     private config: Config;
 
+    public today = moment().format('YYYY-MM-DD');
     public clockStarted = false;
     public logs: Array<Log> = [
         {
             id: this.createId(),
-            date: new Date(),
-            text: 'Example, you can highlight something !important or use #hashtag in your messages',
-            template: `Example, you can highlight something <span class="important">!important</span> or use <span class="tag">#hashtag</span> in your messages`
+            date: moment(),
+            period: 777,
+            text: '',
+            template: `Example, <span class="important">!tasks</span> and <span class="tag">#hashtags</span> will be highlighted.`
         }
     ];
     public logText: string = '';
+    public groupedTasks: { [key:string]: Task } = {};
+    public tasks: Array<Task> = [];
+    public summary: number = 0;
 
     constructor(private clockService: ClockService, private configService: ConfigService) {
         this.audio = new Audio('./assets/sound.mp3');
@@ -52,66 +60,100 @@ export class ClockComponent {
         this.audio.play();
     }
 
-    private createTemplate(source: string): string {
+    private addOrUpdateTask(period: number, words: Array<string>): void {
+        words.forEach(s => {
+            this.groupedTasks[s] = this.groupedTasks[s] || { value: 0, count: 0, name: null };
+            this.groupedTasks[s].value += period;
+            this.groupedTasks[s].count++;
+            this.groupedTasks[s].name = s;
+        });
+    }
+
+    private createTemplate(source: string): { value: string, symbols: { [key:string]: boolean } } {
+        let symbols: { [key:string]: boolean } = {};
+        let result = { value: null, symbols: symbols };
         let delimiter = ' ';
-        return source
+        result.value = source
             .split(delimiter)
             .map((word: string) => {
                 if (word.indexOf('#') == 0) {
                     return '<span class="tag">' + word + '</span>';
                 }
                 else if (word.indexOf('!') == 0) {
-                    return '<span class="important">' + word + '</span>';
+                    symbols[word] = true;
+                    return '<span class="task">' + word + '</span>';
                 }
                 return word;
             }).join(delimiter);
+
+        return result;
     }
 
     private createId(): string {
         return Date.now().toString();
     }
 
+    private updateSummary(period) {
+        this.summary += period;
+    }
+
+    private getPeriod(): number {
+        let time = this.clock.getTime();
+        return this.config.counter - time;
+    }
+
+    updateTasks() {
+        this.tasks = Object.keys(this.groupedTasks).map(s => this.groupedTasks[s]);
+    }
+
     onSaveLog() {
         if (this.logText) {
             let id = this.createId();
             let template = this.createTemplate(this.logText);
-            let log = { id: id, date: new Date(), text: this.logText, template: template };
+            let period = this.getPeriod();
+            let log = { id: id, date: moment(), period: period, text: this.logText, template: template.value };
             this.logs.unshift(log);
             this.logText = '';
 
-            if (this.interval !== null) {
-                this.onResetTimer();
-            }
+            this.onResetTimer();
+            this.updateSummary(period);
+            this.addOrUpdateTask(period, Object.keys(template.symbols));
+            this.updateTasks();
         }
     }
 
-    onDeleteLog(id: string) {
+    onDeleteLog(log: Log): void {
         let index = -1;
         this.logs.forEach((x, i) => {
-            if (x.id === id) {
+            if (x.id === log.id) {
                 index = i;
             }
         });
         if (index !== -1) {
             this.logs.splice(index, 1);
         }
+        this.updateTasks();
     }
 
-    onStartTimer() {
+    onCopyLog(text: string): void {
+        this.logText = text;
+    }
+
+    onStartTimer(): void {
         if (!this.clockStarted) {
             this.clock.start();
             this.clockStarted = true;
         }
     }
 
-    onStopTimer() {
+    onStopTimer(): void {
         if (this.clockStarted) {
             this.clock.stop();
             this.clockStarted = false;
         }
     }
 
-    onResetTimer() {
+    onResetTimer(): void {
         this.onStopTimer();
         clearInterval(this.interval);
         this.interval = null;

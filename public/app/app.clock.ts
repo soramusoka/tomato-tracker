@@ -5,4 +5,5 @@
 export interface Clock {
     start: () => void;
     stop: () => void;
+    getTime: () => number;
 }

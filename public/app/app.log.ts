@@ -5,6 +5,7 @@
 export interface Log {
     id: string,
     text: string;
+    period: number;
     template: string;
     date: Date
 }
