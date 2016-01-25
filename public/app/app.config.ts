@@ -15,17 +15,9 @@ export class ConfigService {
         let params = this.parseUrl();
 
         return {
-            counter: parseInt(params['counter']) || 1800,
+            counter: parseInt(params['counter']) || 1500,
             sprint: !!params['sprint']
         };
-    }
-
-    private parseInt(str: string) {
-        try {
-            return Number.parseInt(str)
-        } catch (e) {
-            return 0;
-        }
     }
 
     private parseUrl(): { [key:string]: any } {
