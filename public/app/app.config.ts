@@ -7,6 +7,7 @@ import {Injectable} from "angular2/core";
 export interface Config {
     counter: number;
     sprint: boolean;
+    showBar: boolean;
 }
 
 @Injectable()
@@ -16,7 +17,8 @@ export class ConfigService {
 
         return {
             counter: parseInt(params['counter']) || 1500,
-            sprint: !!params['sprint']
+            sprint: !!params['sprint'],
+            showBar: !!params['showBar']
         };
     }
 

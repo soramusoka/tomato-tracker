@@ -33,19 +33,30 @@
                     </button>
                 </div>
                 <div class="btn-group" role="group">
-                    <span style="margin-left: 10px;">
-                        Today: <span style="color: #217dbb">{{today}}</span>
+                    <span style="margin-left: 10px;">@configuration:</span>
+                    <span style="margin-left: 10px;">{</span>
+                    <span style="margin-left: 5px;">
+                        today: <span style="color: #3498db">{{today}}</span>,
                     </span>
                     <span style="margin-left: 10px;">
-                        Sprint: <span style="color: #217dbb">{{config.sprint}}</span>
+                        counter: <span style="color: #3498db">{{config.counter}}</span>,
                     </span>
                     <span style="margin-left: 10px;">
-                        Counter: <span style="color: #217dbb">{{config.counter}}</span> seconds
+                        sprint: <span style="color: #3498db">{{config.sprint}}</span>,
                     </span>
+                    <span style="margin-left: 10px;">
+                        showBar: <span style="color: #3498db">{{config.showBar}}</span>
+                    </span>
+                    <span style="margin-left: 5px;">}</span>
+                </div>
+            </div>
+            <div class="panel panel-default" style="margin-top: 1em;" [hidden]="!config.showBar">
+                <div class="panel-body">
+                    <div id="chart"></div>
                 </div>
             </div>
             <div class="gray">
-                <h3>History</h3>
+                <h4>History</h4>
             </div>
             <div class="row">
                 <div class="col-md-9">
@@ -61,7 +72,7 @@
                                     </button>
                                 </div>
                                 <div class="entry-date gray">
-                                    <span class="label label-default">{{log.date.format()}}</span> <span class="label label-default">{{log.period}} sec</span>
+                                    <span class="label label-default">{{log.date.format('h:mm:ss a')}}</span> <span class="label label-default">{{log.period}} sec</span>
                                 </div>
                             </div>
                             <div [innerHTML]="log.template" class="entry-value"></div>
@@ -71,9 +82,9 @@
                 <div class="col-md-3">
                     <div class="panel panel-default" style="margin-top: 1em;">
                         <div class="panel-body">
-                            <span>Summary: {{summary}} sec</span>
+                            <span>Summary {{moment.duration(summary, 'seconds').humanize()}}</span>
                             <div *ngFor="#task of tasks" style="margin-top: 0.8em;">
-                                <span class="task">{{task.name}}</span> - {{task.value}} sec
+                                <span class="task">{{task.name}}</span> {{moment.duration(task.value, 'seconds').minutes()}} min
                             </div>
                         </div>
                     </div>
