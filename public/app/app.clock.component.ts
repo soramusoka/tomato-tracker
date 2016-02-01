@@ -8,14 +8,13 @@ import {Clock} from "./app.clock";
 import {Log} from "./app.log";
 import {ConfigService, Config} from "./app.config";
 import {Task} from "./app.task";
-import {ChartController} from './app.chart.controller';
 
 declare let moment;
 
 @Component({
     selector: 'app',
     templateUrl: './app/template.html',
-    providers: [ClockService, ConfigService, ChartController]
+    providers: [ClockService, ConfigService]
 })
 export class ClockComponent {
     private clock: Clock;
@@ -31,7 +30,7 @@ export class ClockComponent {
             date: moment(),
             period: 777,
             text: '',
-            template: `Example, <span class="task">!tasks</span> and <span class="tag">#hashtags</span> will be highlighted.`
+            template: `Example, <span class="task">!tasks</span> and <span class="tag">#hashtags</span> are highlighted.`
         }
     ];
     public logText: string = '';
@@ -40,11 +39,10 @@ export class ClockComponent {
     public summary: number = 0;
     public moment = null;
 
-    constructor(private clockService: ClockService, private configService: ConfigService, private chartController: ChartController) {
+    constructor(private clockService: ClockService, private configService: ConfigService) {
         this.audio = new Audio('./assets/sound.mp3');
         this.config = configService.getConfig();
         this.createClock();
-        this.chartController.createBar(['!tasks'], [777]);
         this.moment = moment;
     }
 
@@ -110,7 +108,6 @@ export class ClockComponent {
         let keys = Object.keys(this.groupedTasks);
         let values = keys.map(s => this.groupedTasks[s].value);
         this.tasks = keys.map(s => this.groupedTasks[s]);
-        this.chartController.createBar(keys, values);
     }
 
     onSaveLog() {
