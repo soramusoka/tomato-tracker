@@ -67,16 +67,16 @@
                                     <span class="label label-default">{{log.date.format('h:mm:ss a')}}</span> <span class="label label-default">{{log.period}} sec</span>
                                 </div>
                             </div>
-                            <div [innerHTML]="log.template" class="entry-value"></div>
+                            <div [innerHTML]="log.template.value" class="entry-value"></div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="panel panel-default" style="margin-top: 1em;">
                         <div class="panel-body">
-                            <span>Summary {{moment.duration(summary, 'seconds').humanize()}}</span>
+                            <span>Summary {{onGetTime(summary)}} h</span>
                             <div *ngFor="#task of tasks" style="margin-top: 0.8em;">
-                                <span class="task">{{task.name}}</span> {{moment.duration(task.value, 'seconds').minutes()}} min
+                                <span class="task">{{task.name}}</span> {{onGetTime(task.value)}} h
                             </div>
                         </div>
                     </div>

@@ -3,7 +3,7 @@
  */
 
 import {Injectable} from "angular2/core";
-import {Clock} from "./app.clock";
+import {Clock} from "./app.types";
 
 @Injectable()
 export class ClockService {

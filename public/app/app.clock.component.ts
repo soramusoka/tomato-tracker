@@ -4,10 +4,8 @@
 
 import {Component} from 'angular2/core';
 import {ClockService} from "./app.clock.service";
-import {Clock} from "./app.clock";
-import {Log} from "./app.log";
-import {ConfigService, Config} from "./app.config";
-import {Task} from "./app.task";
+import {StringMap, Clock, Task, Template, Log} from "./app.types";
+import {ConfigService, Config} from "./app.config.service";
 
 declare let moment;
 
@@ -30,13 +28,16 @@ export class ClockComponent {
             date: moment(),
             period: 777,
             text: '',
-            template: `Example, <span class="task">!tasks</span> and <span class="tag">#hashtags</span> are highlighted.`
+            template: {
+                value: `Example, <span class="task">!tasks</span> and <span class="tag">#hashtags</span> are highlighted.`,
+                symbols: { '!tasks': true }
+            }
         }
     ];
     public logText: string = '';
     public groupedTasks: { [key:string]: Task } = {};
     public tasks: Array<Task> = [];
-    public summary: number = 0;
+    public summary: number = 777;
     public moment = null;
 
     constructor(private clockService: ClockService, private configService: ConfigService) {
@@ -68,12 +69,16 @@ export class ClockComponent {
             this.groupedTasks[s].value += period;
             this.groupedTasks[s].count++;
             this.groupedTasks[s].name = s;
+
+            if (this.groupedTasks[s].value <= 0) {
+                delete this.groupedTasks[s];
+            }
         });
     }
 
-    private createTemplate(source: string): { value: string, symbols: { [key:string]: boolean } } {
-        let symbols: { [key:string]: boolean } = {};
-        let result = { value: null, symbols: symbols };
+    private createTemplate(source: string): Template {
+        let symbolMap: StringMap<boolean> = {};
+        let result: Template = { value: null, symbols: symbolMap };
         let delimiter = ' ';
         result.value = source
             .split(delimiter)
@@ -82,7 +87,7 @@ export class ClockComponent {
                     return '<span class="tag">' + word + '</span>';
                 }
                 else if (word.indexOf('!') == 0) {
-                    symbols[word] = true;
+                    symbolMap[word] = true;
                     return '<span class="task">' + word + '</span>';
                 }
                 return word;
@@ -106,7 +111,6 @@ export class ClockComponent {
 
     updateTasks() {
         let keys = Object.keys(this.groupedTasks);
-        let values = keys.map(s => this.groupedTasks[s].value);
         this.tasks = keys.map(s => this.groupedTasks[s]);
     }
 
@@ -115,7 +119,7 @@ export class ClockComponent {
             let id = this.createId();
             let template = this.createTemplate(this.logText);
             let period = this.getPeriod();
-            let log = { id: id, date: moment(), period: period, text: this.logText, template: template.value };
+            let log = { id: id, date: moment(), period: period, text: this.logText, template: template };
             this.logs.unshift(log);
             this.logText = '';
 
@@ -136,11 +140,22 @@ export class ClockComponent {
         if (index !== -1) {
             this.logs.splice(index, 1);
         }
+
+        this.addOrUpdateTask(-log.period, Object.keys(log.template.symbols));
         this.updateTasks();
+        this.updateSummary(-log.period);
     }
 
     onCopyLog(text: string): void {
         this.logText = text;
+    }
+
+    /**
+     * Time methods
+     */
+
+    onGetTime(value: number, metric?: string): string {
+        return moment.duration(value, metric || 'seconds').asHours().toFixed(2);
     }
 
     onStartTimer(): void {
