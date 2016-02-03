@@ -3,22 +3,23 @@
  */
 
 import {Injectable} from "angular2/core";
+import {Config} from "./app.types";
 
-export interface Config {
-    counter: number;
-    sprint: boolean;
-    showBar: boolean;
-}
+declare let moment;
 
 @Injectable()
 export class ConfigService {
+
     getConfig(): Config {
         let params = this.parseUrl();
+        console.log('params', params);
+        console.log('window.location.search', window.location.search);
 
         return {
             counter: parseInt(params['counter']) || 1500,
             sprint: !!params['sprint'],
-            showBar: !!params['showBar']
+            showBar: !!params['showBar'],
+            day: moment().format('YYYY-MM-DD')
         };
     }
 

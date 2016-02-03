@@ -30,3 +30,10 @@ export interface Task {
     value: number;
     count: number;
 }
+
+export interface Config {
+    counter: number;
+    sprint: boolean;
+    showBar: boolean;
+    day: string;
+}

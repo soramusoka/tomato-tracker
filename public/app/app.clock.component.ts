@@ -4,24 +4,22 @@
 
 import {Component} from 'angular2/core';
 import {ClockService} from "./app.clock.service";
-import {StringMap, Clock, Task, Template, Log} from "./app.types";
-import {ConfigService, Config} from "./app.config.service";
+import {Config, StringMap, Clock, Task, Template, Log} from "./app.types";
+import {ConfigService} from "./app.config.service";
+import {NotificationService} from "./app.notification.service";
 
 declare let moment;
 
 @Component({
     selector: 'app',
     templateUrl: './app/template.html',
-    providers: [ClockService, ConfigService]
+    providers: [ClockService, ConfigService, NotificationService]
 })
 export class ClockComponent {
-    private clock: Clock;
-    private audio: { play: () => void; };
-    private interval = null;
-    private config: Config;
-
-    public today = moment().format('YYYY-MM-DD');
+    public config: Config;
     public clockStarted = false;
+    public summary: number = 777;
+
     public logs: Array<Log> = [
         {
             id: this.createId(),
@@ -37,30 +35,14 @@ export class ClockComponent {
     public logText: string = '';
     public groupedTasks: { [key:string]: Task } = {};
     public tasks: Array<Task> = [];
-    public summary: number = 777;
     public moment = null;
 
-    constructor(private clockService: ClockService, private configService: ConfigService) {
-        this.audio = new Audio('./assets/sound.mp3');
-        this.config = configService.getConfig();
-        this.createClock();
+    constructor(private clockService: ClockService,
+                private configService: ConfigService) {
         this.moment = moment;
-    }
+        this.config = configService.getConfig();
 
-    private createClock() {
-        let onEachSecond = (time: number) => {
-            if (time == 0) this.notify();
-        };
-        this.clock = this.clockService.createClock(this.config.counter, onEachSecond);
-    }
-
-    private notify(): void {
-        this.interval = setInterval(() => this.playSound(), 2000);
-        // send notification
-    }
-
-    private playSound() {
-        this.audio.play();
+        clockService.createClock(this.config.counter);
     }
 
     private addOrUpdateTask(period: number, words: Array<string>): void {
@@ -104,11 +86,6 @@ export class ClockComponent {
         this.summary += period;
     }
 
-    private getPeriod(): number {
-        let time = this.clock.getTime();
-        return this.config.counter - time;
-    }
-
     updateTasks() {
         let keys = Object.keys(this.groupedTasks);
         this.tasks = keys.map(s => this.groupedTasks[s]);
@@ -118,7 +95,7 @@ export class ClockComponent {
         if (this.logText) {
             let id = this.createId();
             let template = this.createTemplate(this.logText);
-            let period = this.getPeriod();
+            let period = this.clockService.getPeriod();
             let log = { id: id, date: moment(), period: period, text: this.logText, template: template };
             this.logs.unshift(log);
             this.logText = '';
@@ -150,34 +127,27 @@ export class ClockComponent {
         this.logText = text;
     }
 
-    /**
-     * Time methods
-     */
-
     onGetTime(value: number, metric?: string): string {
         return moment.duration(value, metric || 'seconds').asHours().toFixed(2);
     }
 
     onStartTimer(): void {
         if (!this.clockStarted) {
-            this.clock.start();
+            this.clockService.startClock();
             this.clockStarted = true;
         }
     }
 
     onStopTimer(): void {
         if (this.clockStarted) {
-            this.clock.stop();
+            this.clockService.stopClock();
             this.clockStarted = false;
         }
     }
 
     onResetTimer(): void {
         this.onStopTimer();
-        clearInterval(this.interval);
-        this.interval = null;
-        this.createClock();
-
+        this.clockService.createClock(this.config.counter);
         if (this.config.sprint) {
             this.onStartTimer();
         }
