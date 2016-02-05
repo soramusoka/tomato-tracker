@@ -2,16 +2,18 @@
  * Created by artem.kolosovich on 23.01.2016.
  */
 
-import {Injectable} from "angular2/core";
+import {Component, Injectable} from "angular2/core";
 import {Clock} from "./app.types";
-import {Component} from "angular2/core";
 import {NotificationService} from "./app.notification.service";
+
+declare let moment;
 
 @Injectable()
 @Component({
     providers: [NotificationService]
 })
 export class ClockService {
+    private clockStarted = false;
     private clock: Clock;
     private counter = 0;
 
@@ -37,11 +39,13 @@ export class ClockService {
         });
     }
 
-    startClock() {
+    startClock(): void {
+        this.clockStarted = true;
         return this.clock.start();
     }
 
-    stopClock() {
+    stopClock(): void {
+        this.clockStarted = false;
         return this.clock.stop();
     }
 
@@ -49,8 +53,23 @@ export class ClockService {
         return this.clock.getTime();
     }
 
-    getPeriod(): number {
-        let time = this.clock.getTime();
-        return this.counter - time;
+    getDuration(): number {
+        return this.counter - this.getTime();
+    }
+
+    formatDurationAsHours(value: number, metric: string) {
+        return moment.duration(value, metric).asHours().toFixed(2);
+    }
+
+    isClockStarted(): boolean {
+        return this.clockStarted;
+    }
+
+    getDateTime(): {} {
+        return moment();
+    }
+
+    getTimestamp(): string {
+        return moment.now().toString();
     }
 }

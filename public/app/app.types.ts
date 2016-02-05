@@ -14,9 +14,9 @@ export interface Template {
 export interface Log {
     id: string,
     text: string;
-    period: number;
+    duration: number;
     template: Template;
-    date: Date
+    date: {}
 }
 
 export interface Clock {

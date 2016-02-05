@@ -8,8 +8,6 @@ import {Config, StringMap, Clock, Task, Template, Log} from "./app.types";
 import {ConfigService} from "./app.config.service";
 import {NotificationService} from "./app.notification.service";
 
-declare let moment;
-
 @Component({
     selector: 'app',
     templateUrl: './app/template.html',
@@ -17,38 +15,36 @@ declare let moment;
 })
 export class ClockComponent {
     public config: Config;
-    public clockStarted = false;
-    public summary: number = 777;
-
-    public logs: Array<Log> = [
-        {
-            id: this.createId(),
-            date: moment(),
-            period: 777,
-            text: '',
-            template: {
-                value: `Example, <span class="task">!tasks</span> and <span class="tag">#hashtags</span> are highlighted.`,
-                symbols: { '!tasks': true }
-            }
-        }
-    ];
+    public durationSummary = 0;
+    public logs: Array<Log> = [];
     public logText: string = '';
     public groupedTasks: { [key:string]: Task } = {};
     public tasks: Array<Task> = [];
-    public moment = null;
 
     constructor(private clockService: ClockService,
                 private configService: ConfigService) {
-        this.moment = moment;
-        this.config = configService.getConfig();
 
+        this.config = configService.getConfig();
         clockService.createClock(this.config.counter);
+
+        this.createTaskExample();
     }
 
-    private addOrUpdateTask(period: number, words: Array<string>): void {
+    private clearState() {
+        this.onResetTimer();
+        this.logText = '';
+    }
+
+    private createTaskExample() {
+        let text = 'Example, !tasks and #hashtags are highlighted.';
+        let duration = 777;
+        this.onSaveLog(text, duration);
+    }
+
+    private addOrUpdateTask(duration: number, words: Array<string>): void {
         words.forEach(s => {
             this.groupedTasks[s] = this.groupedTasks[s] || { value: 0, count: 0, name: null };
-            this.groupedTasks[s].value += period;
+            this.groupedTasks[s].value += duration;
             this.groupedTasks[s].count++;
             this.groupedTasks[s].name = s;
 
@@ -78,32 +74,34 @@ export class ClockComponent {
         return result;
     }
 
-    private createId(): string {
-        return Date.now().toString();
+    private updateDurationSummary(duration) {
+        this.durationSummary += duration;
     }
 
-    private updateSummary(period) {
-        this.summary += period;
-    }
-
-    updateTasks() {
+    private updateTasks() {
         let keys = Object.keys(this.groupedTasks);
         this.tasks = keys.map(s => this.groupedTasks[s]);
     }
 
-    onSaveLog() {
-        if (this.logText) {
-            let id = this.createId();
-            let template = this.createTemplate(this.logText);
-            let period = this.clockService.getPeriod();
-            let log = { id: id, date: moment(), period: period, text: this.logText, template: template };
-            this.logs.unshift(log);
-            this.logText = '';
+    private addLog(log: Log): void {
+        this.logs.unshift(log);
+    }
 
-            this.onResetTimer();
-            this.updateSummary(period);
-            this.addOrUpdateTask(period, Object.keys(template.symbols));
+    onSaveLog(text?: string, duration?: number): void {
+        if (this.logText || (text && duration)) {
+            text = text || this.logText;
+            duration = duration || this.clockService.getDuration();
+
+            let id = this.clockService.getTimestamp();
+            let template = this.createTemplate(text);
+            let date = this.clockService.getDateTime();
+
+            this.addLog({ id: id, date: date, duration: duration, text: text, template: template });
+            this.addOrUpdateTask(duration, Object.keys(template.symbols));
             this.updateTasks();
+            this.updateDurationSummary(duration);
+
+            this.clearState();
         }
     }
 
@@ -118,30 +116,28 @@ export class ClockComponent {
             this.logs.splice(index, 1);
         }
 
-        this.addOrUpdateTask(-log.period, Object.keys(log.template.symbols));
+        this.addOrUpdateTask(-log.duration, Object.keys(log.template.symbols));
         this.updateTasks();
-        this.updateSummary(-log.period);
+        this.updateDurationSummary(-log.duration);
     }
 
-    onCopyLog(text: string): void {
+    onCopyLogText(text: string): void {
         this.logText = text;
     }
 
     onGetTime(value: number, metric?: string): string {
-        return moment.duration(value, metric || 'seconds').asHours().toFixed(2);
+        return this.clockService.formatDurationAsHours(value, metric || 'seconds');
     }
 
     onStartTimer(): void {
-        if (!this.clockStarted) {
+        if (!this.clockService.isClockStarted()) {
             this.clockService.startClock();
-            this.clockStarted = true;
         }
     }
 
     onStopTimer(): void {
-        if (this.clockStarted) {
+        if (this.clockService.isClockStarted()) {
             this.clockService.stopClock();
-            this.clockStarted = false;
         }
     }
 
