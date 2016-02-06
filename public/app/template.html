@@ -9,7 +9,9 @@
                         </div>
                         <div class="col-md-8">
                             <div class="form-group" style="padding: 1em;">
-                                <textarea [(ngModel)]="logText" class="form-control" rows="3"></textarea>
+                                <textarea class="form-control" rows="3"
+                                          placeholder="Write your log here"
+                                          [(ngModel)]="logText"></textarea>
                             </div>
                         </div>
                     </div>
@@ -18,18 +20,33 @@
 
             <div class="well well-sm" style="background-color: rgba(70, 69, 69, 0.38)">
                 <div class="btn-group" role="group">
-                    <button [hidden]="clockService.isClockStarted()" class="btn btn-default" (click)="onStartTimer()">Start</button>
-                </div>
-                <div class="btn-group" role="group">
-                    <button [hidden]="!clockService.isClockStarted()" class="btn btn-default" (click)="onStopTimer()">Stop</button>
-                </div>
-                <div class="btn-group" role="group">
-                    <button class="btn btn-default" (click)="onResetTimer()">Reset</button>
+                    <button class="btn btn-default"
+                            title="Start timer"
+                            [hidden]="clockService.isClockStarted()"
+                            (click)="onStartTimer()">
+                        Start
+                    </button>
                 </div>
                 <div class="btn-group" role="group">
                     <button class="btn btn-default"
+                            title="Stop timer"
+                            [hidden]="!clockService.isClockStarted()"
+                            (click)="onStopTimer()">
+                        Stop
+                    </button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-default"
+                            title="Reset timer"
+                            (click)="onResetTimer()">
+                        Reset
+                    </button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button class="btn btn-default"
+                            title="Add new log"
                             [disabled]="!logText"
-                            (click)="onSaveLog()">Save
+                            (click)="onSaveLog()">Save log
                     </button>
                 </div>
                 <div class="btn-group" role="group">
@@ -47,30 +64,58 @@
                     <span style="margin-left: 5px;">}</span>
                 </div>
             </div>
+
             <div class="gray">
                 <h4>History</h4>
             </div>
+
             <div class="row">
                 <div class="col-md-9">
+
+                    <!--Log story block-->
                     <div class="panel panel-default" style="margin-top: 1em;" *ngFor="#log of logs">
                         <div class="panel-body">
-                            <div>
+                            <div class="panel-body-edit" [hidden]="log.mode !== 'edit'">
+                                <div>
+                                    <textarea [(ngModel)]="log.text" class="form-control" rows="3"></textarea>
+                                </div>
+                                <div class="input-group" style="margin-top: 10px;">
+                                    <span class="input-group-addon" id="sizing-addon3">Duration</span>
+                                    <input type="text"
+                                           [(ngModel)]="log.duration"
+                                           (ngModelChange)="onLogDurationChange(log)"
+                                           class="form-control"
+                                           placeholder="Example: 777"
+                                           aria-describedby="sizing-addon1">
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-primary" (click)="onUpdateLog(log)">
+                                            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Update log
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="panel-body-view" [hidden]="log.mode !== 'view'">
                                 <div class="pull-right">
-                                    <button class="btn btn-sm btn-primary" (click)="onCopyLogText(log.text)">
+                                    <button class="btn btn-sm btn-primary" (click)="onCopyLogText(log.text)" title="Copy log text">
                                         <span class="glyphicon glyphicon-copy" aria-hidden="true"></span>
                                     </button>
-                                    <button class="btn btn-sm btn-default" (click)="onDeleteLog(log)">
+                                    <button class="btn btn-sm btn-info" (click)="onEditLog(log)" title="Edit log">
+                                        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+                                    </button>
+                                    <button class="btn btn-sm btn-default" (click)="onDeleteLog(log)" title="Delete log">
                                         <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
                                     </button>
                                 </div>
                                 <div class="entry-date gray">
-                                    <span class="label label-default">{{log.date.format('h:mm:ss a')}}</span> <span class="label label-default">{{onGetTime(log.duration)}} h</span>
+                                    <span>{{log.date.format('h:mm a')}}</span> - <span>duration: {{onGetTime(log.duration)}} h</span>
                                 </div>
+                                <div [innerHTML]="log.template.value" class="entry-value"></div>
                             </div>
-                            <div [innerHTML]="log.template.value" class="entry-value"></div>
                         </div>
                     </div>
                 </div>
+
+                <!--Side block-->
                 <div class="col-md-3">
                     <div class="panel panel-default" style="margin-top: 1em;">
                         <div class="panel-body">
@@ -81,6 +126,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

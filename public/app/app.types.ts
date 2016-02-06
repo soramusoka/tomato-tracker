@@ -15,8 +15,10 @@ export interface Log {
     id: string,
     text: string;
     duration: number;
+    durationOld: number;
     template: Template;
-    date: {}
+    date: {};
+    mode: string;
 }
 
 export interface Clock {

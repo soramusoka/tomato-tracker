@@ -74,8 +74,12 @@ export class ClockComponent {
         return result;
     }
 
-    private updateDurationSummary(duration) {
+    private updateDurationSummary(duration: number) {
+        console.info('updateDurationSummary:', typeof duration, duration);
         this.durationSummary += duration;
+        if (this.durationSummary < 0) {
+            this.durationSummary = 0;
+        }
     }
 
     private updateTasks() {
@@ -88,15 +92,16 @@ export class ClockComponent {
     }
 
     onSaveLog(text?: string, duration?: number): void {
+        console.info('onSaveLog:', text, duration);
         if (this.logText || (text && duration)) {
             text = text || this.logText;
             duration = duration || this.clockService.getDuration();
 
             let id = this.clockService.getTimestamp();
-            let template = this.createTemplate(text);
             let date = this.clockService.getDateTime();
+            let template = this.createTemplate(text);
 
-            this.addLog({ id: id, date: date, duration: duration, text: text, template: template });
+            this.addLog({ id: id, date: date, durationOld: duration, duration: duration, text: text, template: template, mode: 'view' });
             this.addOrUpdateTask(duration, Object.keys(template.symbols));
             this.updateTasks();
             this.updateDurationSummary(duration);
@@ -105,43 +110,71 @@ export class ClockComponent {
         }
     }
 
-    onDeleteLog(log: Log): void {
+    private deleteLog(id: string) {
         let index = -1;
         this.logs.forEach((x, i) => {
-            if (x.id === log.id) {
+            if (x.id === id) {
                 index = i;
             }
         });
         if (index !== -1) {
             this.logs.splice(index, 1);
         }
+    }
 
-        this.addOrUpdateTask(-log.duration, Object.keys(log.template.symbols));
+    onDeleteLog(log: Log): void {
+        console.info('onDeleteLog:', JSON.stringify(log));
+        this.deleteLog(log.id);
+        this.addOrUpdateTask(-log.durationOld, Object.keys(log.template.symbols));
         this.updateTasks();
-        this.updateDurationSummary(-log.duration);
+        this.updateDurationSummary(-log.durationOld);
     }
 
     onCopyLogText(text: string): void {
+        console.info('onCopyLogText:', text);
         this.logText = text;
     }
 
-    onGetTime(value: number, metric?: string): string {
-        return this.clockService.formatDurationAsHours(value, metric || 'seconds');
+    onEditLog(log: Log): void {
+        console.info('onEditLog:', JSON.stringify(log));
+        log.mode = 'edit';
+    }
+
+    onUpdateLog(log: Log): void {
+        console.info('onUpdateLog:', JSON.stringify(log));
+        this.onDeleteLog(log);
+        this.onSaveLog(log.text, log.duration);
+    }
+
+    onLogDurationChange(log) {
+        console.info('onLogDurationChange:', JSON.stringify(log));
+        log.duration = parseInt(log.duration);
+        if (!log.duration) {
+            log.duration = log.durationOld;
+        }
+    }
+
+    onGetTime(duration: number, metric?: string): string {
+        console.info('onGetTime:', duration, metric);
+        return this.clockService.formatDurationAsHours(duration, metric || 'seconds');
     }
 
     onStartTimer(): void {
+        console.info('onStartTimer');
         if (!this.clockService.isClockStarted()) {
             this.clockService.startClock();
         }
     }
 
     onStopTimer(): void {
+        console.info('onStopTimer');
         if (this.clockService.isClockStarted()) {
             this.clockService.stopClock();
         }
     }
 
     onResetTimer(): void {
+        console.info('onResetTimer');
         this.onStopTimer();
         this.clockService.createClock(this.config.counter);
         if (this.config.sprint) {
