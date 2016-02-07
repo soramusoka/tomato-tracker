@@ -7,6 +7,7 @@ import {ClockService} from "./app.clock.service";
 import {Config, StringMap, Clock, Task, Template, Log} from "./app.types";
 import {ConfigService} from "./app.config.service";
 import {NotificationService} from "./app.notification.service";
+import {Logger} from "./app.logger";
 
 @Component({
     selector: 'app',
@@ -75,7 +76,6 @@ export class ClockComponent {
     }
 
     private updateDurationSummary(duration: number) {
-        console.info('updateDurationSummary:', typeof duration, duration);
         this.durationSummary += duration;
         if (this.durationSummary < 0) {
             this.durationSummary = 0;
@@ -91,8 +91,8 @@ export class ClockComponent {
         this.logs.unshift(log);
     }
 
+    @Logger
     onSaveLog(text?: string, duration?: number): void {
-        console.info('onSaveLog:', text, duration);
         if (this.logText || (text && duration)) {
             text = text || this.logText;
             duration = duration || this.clockService.getDuration();
@@ -122,59 +122,59 @@ export class ClockComponent {
         }
     }
 
+    @Logger
     onDeleteLog(log: Log): void {
-        console.info('onDeleteLog:', JSON.stringify(log));
         this.deleteLog(log.id);
         this.addOrUpdateTask(-log.durationOld, Object.keys(log.template.symbols));
         this.updateTasks();
         this.updateDurationSummary(-log.durationOld);
     }
 
+    @Logger
     onCopyLogText(text: string): void {
-        console.info('onCopyLogText:', text);
         this.logText = text;
     }
 
+    @Logger
     onEditLog(log: Log): void {
-        console.info('onEditLog:', JSON.stringify(log));
         log.mode = 'edit';
     }
 
+    @Logger
     onUpdateLog(log: Log): void {
-        console.info('onUpdateLog:', JSON.stringify(log));
         this.onDeleteLog(log);
         this.onSaveLog(log.text, log.duration);
     }
 
+    @Logger
     onLogDurationChange(log) {
-        console.info('onLogDurationChange:', JSON.stringify(log));
         log.duration = parseInt(log.duration);
         if (!log.duration) {
             log.duration = log.durationOld;
         }
     }
 
+    @Logger
     onGetTime(duration: number, metric?: string): string {
-        console.info('onGetTime:', duration, metric);
         return this.clockService.formatDurationAsHours(duration, metric || 'seconds');
     }
 
+    @Logger
     onStartTimer(): void {
-        console.info('onStartTimer');
         if (!this.clockService.isClockStarted()) {
             this.clockService.startClock();
         }
     }
 
+    @Logger
     onStopTimer(): void {
-        console.info('onStopTimer');
         if (this.clockService.isClockStarted()) {
             this.clockService.stopClock();
         }
     }
 
+    @Logger
     onResetTimer(): void {
-        console.info('onResetTimer');
         this.onStopTimer();
         this.clockService.createClock(this.config.counter);
         if (this.config.sprint) {

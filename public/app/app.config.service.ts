@@ -4,16 +4,16 @@
 
 import {Injectable} from "angular2/core";
 import {Config} from "./app.types";
+import {Logger} from "./app.logger";
 
 declare let moment;
 
 @Injectable()
 export class ConfigService {
 
+    @Logger
     getConfig(): Config {
         let params = this.parseUrl();
-        console.log('params', params);
-        console.log('window.location.search', window.location.search);
 
         return {
             counter: parseInt(params['counter']) || 1500,
