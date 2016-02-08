@@ -6,13 +6,14 @@ import {Component} from 'angular2/core';
 import {ClockService} from "./app.clock.service";
 import {Config, StringMap, Clock, Task, Template, Log} from "./app.types";
 import {ConfigService} from "./app.config.service";
-import {NotificationService} from "./app.notification.service";
 import {Logger} from "./app.logger";
+import {AppStorage} from "./app.storage";
+import {NotificationService} from "./app.notification.service";
 
 @Component({
     selector: 'app',
     templateUrl: './app/template.html',
-    providers: [ClockService, ConfigService, NotificationService]
+    providers: [ClockService, ConfigService, AppStorage, NotificationService]
 })
 export class ClockComponent {
     public config: Config;
@@ -23,12 +24,31 @@ export class ClockComponent {
     public tasks: Array<Task> = [];
 
     constructor(private clockService: ClockService,
-                private configService: ConfigService) {
+                private configService: ConfigService,
+                private appStorage: AppStorage) {
 
         this.config = configService.getConfig();
-        clockService.createClock(this.config.counter);
+        this.clockService.createClock(this.config.counter);
+        this.loadStorageData();
+    }
 
-        this.createTaskExample();
+    private loadStorageData() {
+        let data = this.appStorage.load(this.config.day);
+        if (data) {
+            data.forEach(x => {
+                x.date = this.clockService.getDateTime(x.date);
+                this.addLog(x);
+                this.addOrUpdateTask(x.duration, Object.keys(x.template.symbols));
+                this.updateDurationSummary(x.duration);
+            });
+            this.updateTasks();
+        } else {
+            this.createTaskExample();
+        }
+    }
+
+    private updateStorageData() {
+        this.appStorage.save(this.config.day, this.logs);
     }
 
     private clearState() {
@@ -105,6 +125,7 @@ export class ClockComponent {
             this.addOrUpdateTask(duration, Object.keys(template.symbols));
             this.updateTasks();
             this.updateDurationSummary(duration);
+            this.updateStorageData();
 
             this.clearState();
         }
@@ -128,6 +149,7 @@ export class ClockComponent {
         this.addOrUpdateTask(-log.durationOld, Object.keys(log.template.symbols));
         this.updateTasks();
         this.updateDurationSummary(-log.durationOld);
+        this.updateStorageData();
     }
 
     @Logger
